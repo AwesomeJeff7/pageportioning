@@ -21,10 +21,13 @@
     justify-content: center;
     flex-wrap: wrap;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    align-items: center;
   }
 
-  .toolbar label {
-    font-size: 14px;
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .page-wrapper {
@@ -33,6 +36,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
   }
 
   .page {
@@ -41,11 +45,54 @@
     background: white;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     padding: 80px;
-    outline: none;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    transform-origin: center center;
+    position: relative;
     overflow: hidden;
+  }
+
+  .free-toolbox {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+  }
+
+  .box {
+    position: absolute;
+    min-width: 120px;
+    min-height: 40px;
+    padding: 6px;
+    border: 1px dashed #aaa;
+    cursor: move;
+    background: transparent;
+  }
+
+  .box[contenteditable="true"]:focus {
+    outline: 2px solid #4a90e2;
+    cursor: text;
+  }
+
+  .box-toolbar {
+    position: absolute;
+    top: -28px;
+    right: 0;
+    display: none;
+    gap: 5px;
+  }
+
+  .box:hover .box-toolbar {
+    display: flex;
+  }
+
+  button {
+    font-size: 12px;
+    cursor: pointer;
   }
 
   .footer {
@@ -62,6 +109,14 @@
 <body>
 
 <div class="toolbar">
+  <div class="toggle">
+    Mode:
+    <select id="mode">
+      <option value="essay">Essay</option>
+      <option value="free">Free Form</option>
+    </select>
+  </div>
+
   <label>Font Size:
     <input type="range" id="fontSize" min="12" max="36" value="16">
   </label>
@@ -73,11 +128,18 @@
   <label>Margins:
     <input type="range" id="marginSize" min="20" max="120" value="80">
   </label>
+
+  <button onclick="toggleBold()">Bold</button>
 </div>
 
 <div class="page-wrapper">
-  <div id="page" class="page" contenteditable="true" tabindex="0">
+  <div class="page" id="page" contenteditable="true">
     Start typing your essay here...
+  </div>
+
+  <div class="free-toolbox" id="toolbox">
+    <button onclick="addBox('Header')">Header</button>
+    <button onclick="addBox('Paragraph')">Paragraph</button>
   </div>
 </div>
 
@@ -87,6 +149,8 @@
 
 <script>
 const page = document.getElementById("page");
+const mode = document.getElementById("mode");
+const toolbox = document.getElementById("toolbox");
 const fontSize = document.getElementById("fontSize");
 const lineSpacing = document.getElementById("lineSpacing");
 const marginSize = document.getElementById("marginSize");
@@ -96,18 +160,6 @@ function updateWordCount() {
   const text = page.innerText.trim();
   const words = text.length ? text.split(/\s+/) : [];
   wordCountEl.innerText = words.filter(w => w.length > 0).length;
-}
-
-function updateScale() {
-  const pageWidth = 794;
-  const pageHeight = 1123;
-
-  const scale = Math.min(
-    (window.innerWidth * 0.9) / pageWidth,
-    (window.innerHeight * 0.75) / pageHeight
-  );
-
-  page.style.transform = `scale(${scale})`;
 }
 
 fontSize.addEventListener("input", () => {
@@ -122,15 +174,67 @@ marginSize.addEventListener("input", () => {
   page.style.padding = marginSize.value + "px";
 });
 
-page.addEventListener("input", updateWordCount);
-window.addEventListener("resize", updateScale);
+mode.addEventListener("change", () => {
+  if (mode.value === "free") {
+    page.contentEditable = false;
+    toolbox.style.display = "flex";
+  } else {
+    page.contentEditable = true;
+    toolbox.style.display = "none";
+  }
+});
 
-// init
-page.style.fontSize = fontSize.value + "px";
-page.style.lineHeight = lineSpacing.value;
-page.style.padding = marginSize.value + "px";
+function addBox(type) {
+  const box = document.createElement("div");
+  box.className = "box";
+  box.contentEditable = true;
+  box.innerText = type + " text";
+  box.style.left = "100px";
+  box.style.top = "100px";
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "box-toolbar";
+
+  const boldBtn = document.createElement("button");
+  boldBtn.innerText = "B";
+  boldBtn.onclick = () => {
+    document.execCommand("bold");
+  };
+
+  toolbar.appendChild(boldBtn);
+  box.appendChild(toolbar);
+
+  makeDraggable(box);
+  page.appendChild(box);
+}
+
+function makeDraggable(el) {
+  let offsetX, offsetY, dragging = false;
+
+  el.addEventListener("mousedown", (e) => {
+    if (e.target.tagName === "BUTTON" || el.isContentEditable) return;
+    dragging = true;
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    const rect = page.getBoundingClientRect();
+    el.style.left = (e.clientX - rect.left - offsetX) + "px";
+    el.style.top = (e.clientY - rect.top - offsetY) + "px";
+  });
+
+  document.addEventListener("mouseup", () => dragging = false);
+}
+
+function toggleBold() {
+  document.execCommand("bold");
+}
+
+page.addEventListener("input", updateWordCount);
+
 updateWordCount();
-updateScale();
 </script>
 
 </body>
