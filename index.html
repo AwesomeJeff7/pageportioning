@@ -9,10 +9,7 @@
     margin: 0;
     font-family: Arial, sans-serif;
     background: #e5e5e5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
+    overflow: hidden;
   }
 
   .toolbar {
@@ -31,24 +28,24 @@
   }
 
   .page-wrapper {
-    flex: 1;
+    width: 100%;
+    height: calc(100vh - 90px);
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: auto;
-    width: 100%;
-    padding: 20px;
   }
 
   .page {
-    width: 794px; /* A4 approx width in px at 96dpi */
-    min-height: 1123px;
+    width: 794px;
+    height: 1123px;
     background: white;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     padding: 80px;
     outline: none;
     white-space: pre-wrap;
     overflow-wrap: break-word;
+    transform-origin: center center;
+    overflow: hidden;
   }
 
   .footer {
@@ -79,7 +76,7 @@
 </div>
 
 <div class="page-wrapper">
-  <div id="page" class="page" contenteditable="true">
+  <div id="page" class="page" contenteditable="true" tabindex="0">
     Start typing your essay here...
   </div>
 </div>
@@ -101,6 +98,18 @@ function updateWordCount() {
   wordCountEl.innerText = words.filter(w => w.length > 0).length;
 }
 
+function updateScale() {
+  const pageWidth = 794;
+  const pageHeight = 1123;
+
+  const scale = Math.min(
+    (window.innerWidth * 0.9) / pageWidth,
+    (window.innerHeight * 0.75) / pageHeight
+  );
+
+  page.style.transform = `scale(${scale})`;
+}
+
 fontSize.addEventListener("input", () => {
   page.style.fontSize = fontSize.value + "px";
 });
@@ -114,12 +123,14 @@ marginSize.addEventListener("input", () => {
 });
 
 page.addEventListener("input", updateWordCount);
+window.addEventListener("resize", updateScale);
 
 // init
 page.style.fontSize = fontSize.value + "px";
 page.style.lineHeight = lineSpacing.value;
 page.style.padding = marginSize.value + "px";
 updateWordCount();
+updateScale();
 </script>
 
 </body>
