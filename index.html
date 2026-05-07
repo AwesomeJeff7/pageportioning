@@ -21,13 +21,8 @@
     justify-content: center;
     flex-wrap: wrap;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    align-items: center;
-  }
-
-  .toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    z-index: 5;
+    position: relative;
   }
 
   .page-wrapper {
@@ -45,21 +40,30 @@
     background: white;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     padding: 80px;
-    position: relative;
+    outline: none;
     overflow: hidden;
+    position: relative;
+    color: #111;
+    font-size: 16px;
+    line-height: 1.5;
+    transform-origin: center center;
+  }
+
+  .placeholder {
+    color: #aaa;
   }
 
   .free-toolbox {
     position: absolute;
-    left: 10px;
-    top: 10px;
+    left: 20px;
+    top: 20px;
     background: white;
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     display: none;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     z-index: 10;
   }
 
@@ -70,7 +74,7 @@
     padding: 6px;
     border: 1px dashed #aaa;
     cursor: move;
-    background: transparent;
+    background: white;
   }
 
   .box[contenteditable="true"]:focus {
@@ -109,23 +113,20 @@
 <body>
 
 <div class="toolbar">
-  <div class="toggle">
-    Mode:
-    <select id="mode">
-      <option value="essay">Essay</option>
-      <option value="free">Free Form</option>
-    </select>
-  </div>
+  <select id="mode">
+    <option value="essay">Essay Mode</option>
+    <option value="free">Free Form Mode</option>
+  </select>
 
-  <label>Font Size:
+  <label>Font Size
     <input type="range" id="fontSize" min="12" max="36" value="16">
   </label>
 
-  <label>Line Spacing:
+  <label>Line Spacing
     <input type="range" id="lineSpacing" min="1" max="2.5" step="0.1" value="1.5">
   </label>
 
-  <label>Margins:
+  <label>Margins
     <input type="range" id="marginSize" min="20" max="120" value="80">
   </label>
 
@@ -133,7 +134,7 @@
 </div>
 
 <div class="page-wrapper">
-  <div class="page" id="page" contenteditable="true">
+  <div id="page" class="page" contenteditable="true">
     Start typing your essay here...
   </div>
 
@@ -157,9 +158,21 @@ const marginSize = document.getElementById("marginSize");
 const wordCountEl = document.getElementById("wordCount");
 
 function updateWordCount() {
-  const text = page.innerText.trim();
+  const text = page.innerText.replace("Start typing your essay here...", "").trim();
   const words = text.length ? text.split(/\s+/) : [];
   wordCountEl.innerText = words.filter(w => w.length > 0).length;
+}
+
+function updateScale() {
+  const pageW = 794;
+  const pageH = 1123;
+
+  const scale = Math.min(
+    (window.innerWidth * 0.9) / pageW,
+    (window.innerHeight * 0.75) / pageH
+  );
+
+  page.style.transform = `scale(${scale})`;
 }
 
 fontSize.addEventListener("input", () => {
@@ -188,18 +201,16 @@ function addBox(type) {
   const box = document.createElement("div");
   box.className = "box";
   box.contentEditable = true;
-  box.innerText = type + " text";
-  box.style.left = "100px";
-  box.style.top = "100px";
+  box.innerText = type;
+  box.style.left = "120px";
+  box.style.top = "120px";
 
   const toolbar = document.createElement("div");
   toolbar.className = "box-toolbar";
 
   const boldBtn = document.createElement("button");
   boldBtn.innerText = "B";
-  boldBtn.onclick = () => {
-    document.execCommand("bold");
-  };
+  boldBtn.onclick = () => document.execCommand("bold");
 
   toolbar.appendChild(boldBtn);
   box.appendChild(toolbar);
@@ -209,10 +220,12 @@ function addBox(type) {
 }
 
 function makeDraggable(el) {
-  let offsetX, offsetY, dragging = false;
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
 
   el.addEventListener("mousedown", (e) => {
-    if (e.target.tagName === "BUTTON" || el.isContentEditable) return;
+    if (e.target.tagName === "BUTTON") return;
     dragging = true;
     offsetX = e.offsetX;
     offsetY = e.offsetY;
@@ -233,8 +246,10 @@ function toggleBold() {
 }
 
 page.addEventListener("input", updateWordCount);
+window.addEventListener("resize", updateScale);
 
 updateWordCount();
+updateScale();
 </script>
 
 </body>
