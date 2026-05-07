@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Writing Page</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .toolbar {
+    width: 100%;
+    background: #fff;
+    padding: 10px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .toolbar label {
+    font-size: 14px;
+  }
+
+  .page-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .page {
+    width: 794px; /* A4 approx width in px at 96dpi */
+    min-height: 1123px;
+    background: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    padding: 80px;
+    outline: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .footer {
+    padding: 10px;
+    font-size: 14px;
+    background: #fff;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+  }
+
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label>Font Size:
+    <input type="range" id="fontSize" min="12" max="36" value="16">
+  </label>
+
+  <label>Line Spacing:
+    <input type="range" id="lineSpacing" min="1" max="2.5" step="0.1" value="1.5">
+  </label>
+
+  <label>Margins:
+    <input type="range" id="marginSize" min="20" max="120" value="80">
+  </label>
+</div>
+
+<div class="page-wrapper">
+  <div id="page" class="page" contenteditable="true">
+    Start typing your essay here...
+  </div>
+</div>
+
+<div class="footer">
+  Word Count: <span id="wordCount">0</span>
+</div>
+
+<script>
+const page = document.getElementById("page");
+const fontSize = document.getElementById("fontSize");
+const lineSpacing = document.getElementById("lineSpacing");
+const marginSize = document.getElementById("marginSize");
+const wordCountEl = document.getElementById("wordCount");
+
+function updateWordCount() {
+  const text = page.innerText.trim();
+  const words = text.length ? text.split(/\s+/) : [];
+  wordCountEl.innerText = words.filter(w => w.length > 0).length;
+}
+
+fontSize.addEventListener("input", () => {
+  page.style.fontSize = fontSize.value + "px";
+});
+
+lineSpacing.addEventListener("input", () => {
+  page.style.lineHeight = lineSpacing.value;
+});
+
+marginSize.addEventListener("input", () => {
+  page.style.padding = marginSize.value + "px";
+});
+
+page.addEventListener("input", updateWordCount);
+
+// init
+page.style.fontSize = fontSize.value + "px";
+page.style.lineHeight = lineSpacing.value;
+page.style.padding = marginSize.value + "px";
+updateWordCount();
+</script>
+
+</body>
+</html>
